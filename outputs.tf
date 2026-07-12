@@ -1,3 +1,7 @@
+output "data_share_dataset_blob_storages_id" {
+  description = "Map of id values across all data_share_dataset_blob_storages, keyed the same as var.data_share_dataset_blob_storages"
+  value       = { for k, v in azurerm_data_share_dataset_blob_storage.data_share_dataset_blob_storages : k => v.id }
+}
 output "data_share_dataset_blob_storages_container_name" {
   description = "Map of container_name values across all data_share_dataset_blob_storages, keyed the same as var.data_share_dataset_blob_storages"
   value       = { for k, v in azurerm_data_share_dataset_blob_storage.data_share_dataset_blob_storages : k => v.container_name }
