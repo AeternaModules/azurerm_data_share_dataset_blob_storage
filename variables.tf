@@ -26,30 +26,6 @@ EOT
       subscription_id     = string
     })
   }))
-  validation {
-    condition = alltrue([
-      for k, v in var.data_share_dataset_blob_storages : (
-        can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", v.storage_account.subscription_id))
-      )
-    ])
-    error_message = "must be a valid UUID"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.data_share_dataset_blob_storages : (
-        v.file_path == null || (length(v.file_path) > 0)
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.data_share_dataset_blob_storages : (
-        v.folder_path == null || (length(v.folder_path) > 0)
-      )
-    ])
-    error_message = "must not be empty"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_data_share_dataset_blob_storage's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
@@ -82,5 +58,14 @@ EOT
   #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
   # path: storage_account.resource_group_name
   #   source:    [from resourcegroups.ValidateName] !matched
+  # path: storage_account.subscription_id
+  #   condition: can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", value))
+  #   message:   must be a valid UUID
+  # path: file_path
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: folder_path
+  #   condition: length(value) > 0
+  #   message:   must not be empty
 }
 
