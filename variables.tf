@@ -26,46 +26,54 @@ EOT
       subscription_id     = string
     })
   }))
-  # --- Unconfirmed validation candidates, derived from azurerm_data_share_dataset_blob_storage's provider source ---
-  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
-  # or a path that crosses a list-typed block (needs its own for_each wrapping).
-  # Review, translate into a real validation{} block above, and delete once confirmed.
-  # path: name
-  #   source:    validate.DataSetName: no recognizable `if ... { errors = append(...) }` pattern - read it by hand
-  # path: data_share_id
-  #   source:    [from share.ValidateShareID] !ok
-  # path: data_share_id
-  #   source:    [from share.ValidateShareID] err != nil
-  # path: container_name
-  #   source:    [from storageValidate.StorageContainerName] !regexp.MustCompile(`^\$root$|^\$web$|^[0-9a-z-]+$`).MatchString(value)
-  # path: container_name
-  #   source:    [from storageValidate.StorageContainerName] len(value) < 3 || len(value) > 63
-  # path: container_name
-  #   source:    [from storageValidate.StorageContainerName] regexp.MustCompile(`^-`).MatchString(value)
-  # path: storage_account.name
-  #   source:    [from storageValidate.StorageAccountName] !regexp.MustCompile(`\A([a-z0-9]{3,24})\z`).MatchString(input)
-  # path: storage_account.resource_group_name
-  #   condition: length(value) <= 90
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  # path: storage_account.resource_group_name
-  #   condition: !endswith(value, ".")
-  #   message:   [from resourcegroups.ValidateName: must not end with "."]
-  #   source:    [from resourcegroups.ValidateName: must not end with "."]
-  # path: storage_account.resource_group_name
-  #   condition: length(value) != 0
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  # path: storage_account.resource_group_name
-  #   source:    [from resourcegroups.ValidateName] !matched
-  # path: storage_account.subscription_id
-  #   condition: can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", value))
-  #   message:   must be a valid UUID
-  # path: file_path
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: folder_path
-  #   condition: length(value) > 0
-  #   message:   must not be empty
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        length(v.storage_account.resource_group_name) <= 90
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) > 90]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        !endswith(v.storage_account.resource_group_name, ".")
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: must not end with \".\"]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        length(v.storage_account.resource_group_name) != 0
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) == 0]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", v.storage_account.subscription_id))
+      )
+    ])
+    error_message = "must be a valid UUID"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        v.file_path == null || (length(v.file_path) > 0)
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.data_share_dataset_blob_storages : (
+        v.folder_path == null || (length(v.folder_path) > 0)
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  # Note: 8 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
