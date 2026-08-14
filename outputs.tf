@@ -28,6 +28,6 @@ output "data_share_dataset_blob_storages_name" {
 }
 output "data_share_dataset_blob_storages_storage_account" {
   description = "Map of storage_account values across all data_share_dataset_blob_storages, keyed the same as var.data_share_dataset_blob_storages"
-  value       = { for k, v in azurerm_data_share_dataset_blob_storage.data_share_dataset_blob_storages : k => v.storage_account if v.storage_account != null && length(v.storage_account) > 0 }
+  value       = { for k, v in azurerm_data_share_dataset_blob_storage.data_share_dataset_blob_storages : k => one(v.storage_account) if v.storage_account != null && length(v.storage_account) > 0 }
 }
 
